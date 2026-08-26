@@ -322,7 +322,7 @@ export default function LandingHero() {
 >
 
   <Link
-    href="/auth"
+    href="/explore"
     className="
     group
     relative
@@ -387,7 +387,7 @@ export default function LandingHero() {
     >
 
       <span>
-        Get Started
+        Explore
       </span>
 
       <span

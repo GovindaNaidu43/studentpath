@@ -244,7 +244,7 @@ export default function Navbar() {
             {!user && (
 
               <Link
-                href="/auth"
+                href="/explore"
                 className="
                 hidden
                 md:flex
@@ -262,7 +262,7 @@ export default function Navbar() {
                 shadow-[0_0_30px_rgba(217,70,239,0.25)]
                 "
               >
-                Get Started
+                Explore
               </Link>
 
             )}
