@@ -5,7 +5,7 @@ useState,
 useRef,
 useEffect,
 } from "react";
-
+import DashboardNavbar from "@/components/DashboardNavbar";
 import MentorLanding from "@/components/mentor/MentorLanding";
 import MentorChat from "@/components/mentor/MentorChat";
 import MentorInput from "@/components/mentor/MentorInput";
@@ -126,12 +126,17 @@ return (
   py-8
   "
 >
+  <DashboardNavbar />
+
+  
 
   {/* Background Glow */}
 
  {/* ULTRA SPECTRAL BACKGROUND */}
 
 <div className="absolute inset-0 -z-10 overflow-hidden">
+
+  
 
   {/* Pink */}
   <div

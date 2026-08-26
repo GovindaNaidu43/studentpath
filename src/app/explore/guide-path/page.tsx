@@ -1,10 +1,15 @@
-
+import DashboardNavbar from "@/components/DashboardNavbar";
 import MobileBottomNav from "@/components/MobileBottomNav";
 export default function GuidePathPage() {
   return (
     <main className="min-h-screen bg-black text-white">
-
-
+      <DashboardNavbar />
+      <div className="px-12 py-12">
+        {/* <h1 className="text-4xl font-black mb-6">Guide Path</h1> */}
+        {/* <p className="text-zinc-300 text-lg leading-relaxed max-w-3xl mb-8">
+          Welcome to the Guide Path page! Here, you can explore personalized learning paths, career milestones, exam preparation strategies, and future planning tools powered by AI. Start your journey towards achieving your goals and unlocking your full potential.
+        </p> */}
+      </div>
 
       <div className="px-8 py-8">
 

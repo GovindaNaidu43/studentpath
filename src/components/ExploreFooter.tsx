@@ -1,3 +1,4 @@
+import link from "next/link";
 export default function ExploreFooter() {
   return (
     <footer className="relative mt-28 border-t border-white/10 bg-gradient-to-b from-[#06060d] via-[#09031a] to-black text-white">
@@ -60,22 +61,45 @@ export default function ExploreFooter() {
             </ul>
           </div>
 
-          {/* COMMUNITY */}
-          <div>
-            <h3 className="font-bold text-lg text-white mb-5 uppercase tracking-wider text-pink-300 text-xs">
-              Connect
-            </h3>
-            <ul className="space-y-3.5">
-              {["Instagram", "LinkedIn", "Discord", "YouTube"].map((item) => (
-                <li key={item}>
-                  <a href="#" className="text-zinc-400 hover:text-pink-300 transition-all duration-300 text-sm font-medium">
-                    {item}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
+         {/* COMMUNITY */}
+<div>
+  <h3 className="font-bold text-white mb-5 uppercase tracking-wider text-pink-300 text-xs">
+    Connect
+  </h3>
+
+  <ul className="space-y-3.5">
+    {[
+      {
+        name: "Instagram",
+        href: "https://www.instagram.com/studentpath.in?igsi=bDZyN2xkdnRsN3dl",
+      },
+      {
+        name: "LinkedIn",
+        href: "https://linkedin.com/company/YOUR_COMPANY",
+      },
+      {
+        name: "Discord",
+        href: "https://discord.gg/YOUR_INVITE",
+      },
+      {
+        name: "YouTube",
+        href: "https://youtube.com/@YOUR_CHANNEL",
+      },
+    ].map((item) => (
+      <li key={item.name}>
+        <a
+          href={item.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-zinc-400 hover:text-pink-300 transition-all duration-300 text-sm font-medium"
+        >
+          {item.name}
+        </a>
+      </li>
+    ))}
+  </ul>
+</div>
+</div>
 
         {/* BOTTOM */}
         <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs font-medium text-zinc-400">

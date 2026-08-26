@@ -474,7 +474,7 @@ export default function CareerJourneyRoad({
         <div className="text-center mt-20">
 
           <a
-            href="/guide-path"
+            href="/explore/guide-path"
             className="
             inline-flex
 

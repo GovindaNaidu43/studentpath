@@ -96,7 +96,7 @@ export default async function Home() {
       <Testimonials />
 
       {/* SECTION 6: SLEEK NEON PRICING */}
-      <Pricing />
+      {/* <Pricing /> */}
 
       {/* SECTION 7: HIGH ENERGY GLOWING CTA */}
       <CTA />

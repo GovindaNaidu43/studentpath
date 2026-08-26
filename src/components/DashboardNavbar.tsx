@@ -18,8 +18,8 @@ import {
 import { supabaseAuth } from "@/lib/auth";
 
 export default function DashboardNavbar({
-  careers,
-  exams,
+  careers = [],
+  exams = [],
 }: any) {
 
   const searchItems = [

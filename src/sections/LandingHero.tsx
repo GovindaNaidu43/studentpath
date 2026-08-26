@@ -261,6 +261,19 @@ export default function LandingHero() {
 
           </div>
 
+          <div
+            className="
+            text-white
+            text-[1rem]
+            sm:text-4xl
+            md:text-2xl
+            lg:text-[1.1rem]
+            "
+          >
+
+            ~ 𝙶𝚘𝚟𝚒𝚗𝚍𝚊 𝙽𝚊𝚒𝚍𝚞
+          </div>
+
         </motion.h1>
 
         {/* SUBTEXT */}
@@ -460,7 +473,7 @@ export default function LandingHero() {
             "
           >
 
-            <p
+            {/* <p
               className="
               text-zinc-400
               uppercase
@@ -472,9 +485,9 @@ export default function LandingHero() {
 
               Explore Hidden Futures
 
-            </p>
+            </p> */}
 
-            <motion.div
+            {/* <motion.div
               animate={{
                 y: [0, 15, 0],
               }}
@@ -512,7 +525,7 @@ export default function LandingHero() {
 
               </div>
 
-            </motion.div>
+            </motion.div> */}
 
           </motion.div>
 
