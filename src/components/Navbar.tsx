@@ -1,11 +1,7 @@
 "use client";
 
 import Link from "next/link";
-
-import {
-  useState,
-  useEffect,
-} from "react";
+import { useState, useEffect } from "react";
 
 import {
   User,
@@ -15,177 +11,148 @@ import {
   X,
 } from "lucide-react";
 
-import { motion, AnimatePresence }
-from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
-import { supabaseAuth }
-from "@/lib/auth";
+import { supabaseAuth } from "@/lib/auth";
 
 export default function Navbar() {
+  const [scrolled, setScrolled] = useState(false);
 
-  const [scrolled, setScrolled] =
-    useState(false);
+  const [user, setUser] = useState<any>(null);
 
-  const [user, setUser] =
-    useState<any>(null);
+  const [open, setOpen] = useState(false);
 
-  const [open, setOpen] =
-    useState(false);
+  const [mobileMenu, setMobileMenu] = useState(false);
 
-  const [mobileMenu, setMobileMenu] =
-    useState(false);
+  /* SCROLL EFFECT */
 
   useEffect(() => {
-
     const handleScroll = () => {
-
-      setScrolled(
-        window.scrollY > 40
-      );
-
+      setScrolled(window.scrollY > 40);
     };
 
-    window.addEventListener(
-      "scroll",
-      handleScroll,
-      {
-        passive: true,
-      }
-    );
+    window.addEventListener("scroll", handleScroll, {
+      passive: true,
+    });
 
     return () => {
-
       window.removeEventListener(
         "scroll",
         handleScroll
       );
-
     };
-
   }, []);
 
+  /* GET CURRENT USER */
+
   useEffect(() => {
-
     async function getUser() {
-
       const {
         data: { user },
-      } =
-        await supabaseAuth.auth
-          .getUser();
+      } = await supabaseAuth.auth.getUser();
 
       setUser(user);
-
     }
 
     getUser();
-
   }, []);
 
-  async function handleLogout() {
+  /* LOGOUT */
 
-    await supabaseAuth.auth
-      .signOut();
+  async function handleLogout() {
+    await supabaseAuth.auth.signOut();
 
     window.location.href = "/";
-
   }
 
   return (
-
     <>
-
       {/* NAVBAR */}
 
       <header
         className={`
-        fixed
-        top-0
-        left-0
-        w-full
-        z-50
-        transition-all
-        duration-500
-        ease-out
+          fixed
+          top-0
+          left-0
+          w-full
+          z-50
+          transition-all
+          duration-500
+          ease-out
 
-        ${
-          scrolled
-            ? `
-            bg-black/40
-            backdrop-blur-lg
-            border-b
-            border-white/[0.06]
-            shadow-[0_4px_50px_rgba(0,0,0,0.35)]
-            `
-            : `
-            bg-transparent
-            border-b
-            border-transparent
-            `
-        }
+          ${
+            scrolled
+              ? `
+                bg-black/40
+                backdrop-blur-lg
+                border-b
+                border-white/[0.06]
+                shadow-[0_4px_50px_rgba(0,0,0,0.35)]
+              `
+              : `
+                bg-transparent
+                border-b
+                border-transparent
+              `
+          }
         `}
       >
-
         <nav
           className="
-          w-full
-          px-5
-          sm:px-6
-          md:px-10
-          lg:px-12
-          py-4
-          flex
-          items-center
-          justify-between
+            w-full
+            px-5
+            sm:px-6
+            md:px-10
+            lg:px-12
+            py-4
+            flex
+            items-center
+            justify-between
           "
         >
-
           {/* LOGO */}
 
           <Link
             href="/"
             className="
-            text-[1.65rem]
-            sm:text-3xl
-            font-black
-            text-white
-            tracking-tight
-            relative
-            z-50
+              text-[1.65rem]
+              sm:text-3xl
+              font-black
+              text-white
+              tracking-tight
+              relative
+              z-50
             "
           >
-
             StudentPath
 
             <span
               className="
-              text-fuchsia-500
-              ml-1
+                text-fuchsia-500
+                ml-1
               "
             >
               ✦
             </span>
-
           </Link>
 
-          {/* DESKTOP NAV */}
+          {/* DESKTOP NAVIGATION */}
 
           <div
             className="
-            hidden
-            lg:flex
-            items-center
-            gap-10
+              hidden
+              lg:flex
+              items-center
+              gap-10
             "
           >
-
             <Link
               href="/about"
               className="
-              text-zinc-300
-              hover:text-white
-              transition
-              duration-300
+                text-zinc-300
+                hover:text-white
+                transition
+                duration-300
               "
             >
               About
@@ -194,10 +161,10 @@ export default function Navbar() {
             <Link
               href="/explore"
               className="
-              text-zinc-300
-              hover:text-white
-              transition
-              duration-300
+                text-zinc-300
+                hover:text-white
+                transition
+                duration-300
               "
             >
               Careers
@@ -206,10 +173,10 @@ export default function Navbar() {
             <Link
               href="/mentor"
               className="
-              text-zinc-300
-              hover:text-white
-              transition
-              duration-300
+                text-zinc-300
+                hover:text-white
+                transition
+                duration-300
               "
             >
               AI Mentor
@@ -218,118 +185,138 @@ export default function Navbar() {
             <Link
               href="/future"
               className="
-              text-zinc-300
-              hover:text-white
-              transition
-              duration-300
+                text-zinc-300
+                hover:text-white
+                transition
+                duration-300
               "
             >
               Future
             </Link>
-
           </div>
 
           {/* RIGHT SIDE */}
 
           <div
             className="
-            flex
-            items-center
-            gap-3
+              flex
+              items-center
+              gap-3
             "
           >
+            {/* DESKTOP BUTTONS */}
 
-            {/* DESKTOP CTA */}
-
-            {!user && (
+            <div
+              className="
+                hidden
+                md:flex
+                items-center
+                gap-3
+              "
+            >
+              {/* EXPLORE */}
 
               <Link
                 href="/explore"
                 className="
-                hidden
-                md:flex
-                px-6
-                py-3
-                rounded-full
-                bg-gradient-to-r
-                from-fuchsia-600
-                to-purple-600
-                text-white
-                font-medium
-                hover:scale-105
-                transition
-                duration-300
-                shadow-[0_0_30px_rgba(217,70,239,0.25)]
+                  px-6
+                  py-3
+                  rounded-full
+                  border
+                  border-white/15
+                  bg-white/[0.06]
+                  text-white
+                  font-medium
+                  hover:bg-white/[0.12]
+                  hover:scale-105
+                  transition-all
+                  duration-300
                 "
               >
                 Explore
               </Link>
 
-            )}
+              {/* ADMIN LOGIN */}
 
-            {/* USER */}
-
-            {user && (
-
-              <div className="relative">
-
-                <button
-                  onClick={() =>
-                    setOpen(!open)
-                  }
+              {!user && (
+                <Link
+                  href="/auth"
                   className="
-                  w-11
-                  h-11
-                  rounded-full
-                  border
-                  border-white/10
-                  bg-white/[0.05]
-                  backdrop-blur-lg
-                  flex
-                  items-center
-                  justify-center
-                  hover:bg-white/[0.08]
-                  transition
+                    px-6
+                    py-3
+                    rounded-full
+                    bg-gradient-to-r
+                    from-fuchsia-600
+                    to-purple-600
+                    text-white
+                    font-medium
+                    hover:scale-105
+                    hover:shadow-[0_0_40px_rgba(217,70,239,0.4)]
+                    transition-all
+                    duration-300
+                    shadow-[0_0_30px_rgba(217,70,239,0.25)]
                   "
                 >
+                  Login →
+                </Link>
+              )}
+            </div>
 
+            {/* LOGGED-IN USER */}
+
+            {user && (
+              <div className="relative">
+                <button
+                  onClick={() => setOpen(!open)}
+                  className="
+                    w-11
+                    h-11
+                    rounded-full
+                    border
+                    border-white/10
+                    bg-white/[0.05]
+                    backdrop-blur-lg
+                    flex
+                    items-center
+                    justify-center
+                    text-white
+                    hover:bg-white/[0.08]
+                    transition
+                  "
+                >
                   <User size={18} />
-
                 </button>
 
                 {/* USER DROPDOWN */}
 
                 {open && (
-
                   <div
                     className="
-                    absolute
-                    right-0
-                    mt-4
-                    w-[260px]
-                    overflow-hidden
-                    rounded-[26px]
-                    border
-                    border-white/10
-                    bg-black/80
-                    backdrop-blur-2xl
-                    shadow-[0_0_60px_rgba(0,0,0,0.45)]
+                      absolute
+                      right-0
+                      mt-4
+                      w-[260px]
+                      overflow-hidden
+                      rounded-[26px]
+                      border
+                      border-white/10
+                      bg-black/80
+                      backdrop-blur-2xl
+                      shadow-[0_0_60px_rgba(0,0,0,0.45)]
                     "
                   >
-
                     <div
                       className="
-                      p-5
-                      border-b
-                      border-white/10
+                        p-5
+                        border-b
+                        border-white/10
                       "
                     >
-
                       <p
                         className="
-                        text-zinc-500
-                        text-sm
-                        mb-2
+                          text-zinc-500
+                          text-sm
+                          mb-2
                         "
                       >
                         Signed in as
@@ -337,121 +324,96 @@ export default function Navbar() {
 
                       <p
                         className="
-                        text-white
-                        break-all
+                          text-white
+                          break-all
                         "
                       >
                         {user.email}
                       </p>
-
                     </div>
 
                     <div className="p-3">
-
                       <Link
-                        href="/explore"
+                        href="/admin"
                         className="
-                        flex
-                        items-center
-                        gap-3
-                        px-4
-                        py-4
-                        rounded-2xl
-                        hover:bg-white/[0.06]
-                        transition
+                          flex
+                          items-center
+                          gap-3
+                          px-4
+                          py-4
+                          rounded-2xl
+                          text-white
+                          hover:bg-white/[0.06]
+                          transition
                         "
                       >
+                        <LayoutDashboard size={18} />
 
-                        <LayoutDashboard
-                          size={18}
-                        />
-
-                        Explore
-
+                        Dashboard
                       </Link>
 
                       <button
-                        onClick={
-                          handleLogout
-                        }
+                        onClick={handleLogout}
                         className="
-                        w-full
-                        flex
-                        items-center
-                        gap-3
-                        px-4
-                        py-4
-                        rounded-2xl
-                        hover:bg-red-500/10
-                        text-red-400
-                        transition
+                          w-full
+                          flex
+                          items-center
+                          gap-3
+                          px-4
+                          py-4
+                          rounded-2xl
+                          hover:bg-red-500/10
+                          text-red-400
+                          transition
                         "
                       >
-
-                        <LogOut
-                          size={18}
-                        />
+                        <LogOut size={18} />
 
                         Logout
-
                       </button>
-
                     </div>
-
                   </div>
-
                 )}
-
               </div>
-
             )}
 
             {/* MOBILE MENU BUTTON */}
 
             <button
               onClick={() =>
-                setMobileMenu(
-                  !mobileMenu
-                )
+                setMobileMenu(!mobileMenu)
               }
               className="
-              lg:hidden
-              w-11
-              h-11
-              rounded-full
-              border
-              border-white/10
-              bg-white/[0.05]
-              backdrop-blur-lg
-              flex
-              items-center
-              justify-center
-              text-white
-              relative
-              z-50
+                lg:hidden
+                w-11
+                h-11
+                rounded-full
+                border
+                border-white/10
+                bg-white/[0.05]
+                backdrop-blur-lg
+                flex
+                items-center
+                justify-center
+                text-white
+                relative
+                z-50
               "
             >
-
               {mobileMenu ? (
                 <X size={20} />
               ) : (
                 <Menu size={20} />
               )}
-
             </button>
-
           </div>
-
         </nav>
-
       </header>
 
-      {/* MOBILE MENU OVERLAY */}
+      {/* MOBILE MENU */}
 
       <AnimatePresence>
-
         {mobileMenu && (
-
           <motion.div
             initial={{
               opacity: 0,
@@ -466,19 +428,18 @@ export default function Navbar() {
               duration: 0.35,
             }}
             className="
-            fixed
-            inset-0
-            z-40
-            bg-black/90
-            backdrop-blur-xl
-            flex
-            flex-col
-            items-center
-            justify-center
-            px-8
+              fixed
+              inset-0
+              z-40
+              bg-black/90
+              backdrop-blur-xl
+              flex
+              flex-col
+              items-center
+              justify-center
+              px-8
             "
           >
-
             <motion.div
               initial={{
                 opacity: 0,
@@ -497,23 +458,22 @@ export default function Navbar() {
                 ease: "easeOut",
               }}
               className="
-              flex
-              flex-col
-              items-center
-              gap-8
-              text-center
+                flex
+                flex-col
+                items-center
+                gap-8
+                text-center
               "
             >
-
               <Link
                 href="/about"
                 onClick={() =>
                   setMobileMenu(false)
                 }
                 className="
-                text-3xl
-                font-bold
-                text-white
+                  text-3xl
+                  font-bold
+                  text-white
                 "
               >
                 About
@@ -525,9 +485,9 @@ export default function Navbar() {
                   setMobileMenu(false)
                 }
                 className="
-                text-3xl
-                font-bold
-                text-white
+                  text-3xl
+                  font-bold
+                  text-white
                 "
               >
                 Careers
@@ -539,9 +499,9 @@ export default function Navbar() {
                   setMobileMenu(false)
                 }
                 className="
-                text-3xl
-                font-bold
-                text-white
+                  text-3xl
+                  font-bold
+                  text-white
                 "
               >
                 AI Mentor
@@ -553,50 +513,65 @@ export default function Navbar() {
                   setMobileMenu(false)
                 }
                 className="
-                text-3xl
-                font-bold
-                text-white
+                  text-3xl
+                  font-bold
+                  text-white
                 "
               >
                 Future
               </Link>
 
-              {!user && (
+              {/* MOBILE EXPLORE */}
 
+              <Link
+                href="/explore"
+                onClick={() =>
+                  setMobileMenu(false)
+                }
+                className="
+                  mt-4
+                  px-8
+                  py-4
+                  rounded-full
+                  border
+                  border-white/15
+                  bg-white/[0.08]
+                  text-white
+                  font-semibold
+                  text-lg
+                "
+              >
+                Explore
+              </Link>
+
+              {/* MOBILE ADMIN LOGIN */}
+
+              {!user && (
                 <Link
-                  href="/auth"
+                  href="/admin/login"
                   onClick={() =>
                     setMobileMenu(false)
                   }
                   className="
-                  mt-6
-                  px-8
-                  py-4
-                  rounded-full
-                  bg-gradient-to-r
-                  from-fuchsia-600
-                  to-purple-600
-                  text-white
-                  font-semibold
-                  text-lg
-                  shadow-[0_0_40px_rgba(217,70,239,0.35)]
+                    px-8
+                    py-4
+                    rounded-full
+                    bg-gradient-to-r
+                    from-fuchsia-600
+                    to-purple-600
+                    text-white
+                    font-semibold
+                    text-lg
+                    shadow-[0_0_40px_rgba(217,70,239,0.35)]
                   "
                 >
-                  Get Started
+                  Login →
                 </Link>
-
               )}
-
             </motion.div>
-
           </motion.div>
-
         )}
-
       </AnimatePresence>
-
     </>
-
   );
-
 }

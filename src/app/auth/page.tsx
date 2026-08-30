@@ -6,195 +6,228 @@ import Link from "next/link";
 import { supabaseAuth } from "@/lib/auth";
 
 export default function AuthPage() {
+  /*
+   * Controls whether the page shows:
+   * - login form
+   * - signup form
+   */
+  const [mode, setMode] = useState<"login" | "signup">("login");
 
-  const [mode, setMode] =
-    useState<"login" | "signup">(
-      "login"
-    );
+  /*
+   * Prevents multiple clicks while authentication is running.
+   */
+  const [loading, setLoading] = useState(false);
 
-  const [loading, setLoading] =
-    useState(false);
+  /*
+   * Stores authentication errors and messages.
+   */
+  const [error, setError] = useState("");
 
-  const [error, setError] =
-    useState("");
-
-  const [formData, setFormData] =
-
-  useState({
-
+  /*
+   * Stores all form values.
+   */
+  const [formData, setFormData] = useState({
     full_name: "",
-
     email: "",
-
     password: "",
-
   });
 
-  async function handleAuth(
-    e: React.FormEvent
-  ) {
-
+  /*
+   * Handles BOTH login and signup.
+   */
+  async function handleAuth(e: React.FormEvent) {
     e.preventDefault();
 
     try {
-
       setLoading(true);
       setError("");
 
-      /* LOGIN */
+      /* =====================================================
+         LOGIN
+         ===================================================== */
 
       if (mode === "login") {
+        /*
+         * Step 1:
+         * Supabase verifies email and password.
+         */
+        const { error: loginError } =
+          await supabaseAuth.auth.signInWithPassword({
+            email: formData.email,
+            password: formData.password,
+          });
 
-        const { error } =
-          await supabaseAuth.auth
-            .signInWithPassword({
-              email: formData.email,
-              password:
-                formData.password,
-            });
-
-        if (error) {
-
-          setError(error.message);
+        if (loginError) {
+          setError(loginError.message);
           return;
-
         }
 
-        if (
-          formData.email ===
-          "govindanaidu163@gmail.com"
-        ) {
+        /*
+         * Step 2:
+         * Get the currently authenticated user.
+         */
+        const {
+          data: { user },
+          error: userError,
+        } = await supabaseAuth.auth.getUser();
 
-          window.location.href =
-            "/admin";
+        if (userError || !user) {
+          setError(
+            "Login succeeded, but we could not get your user information."
+          );
+          return;
+        }
 
+        /*
+         * Step 3:
+         * Check the user's role from the profiles table.
+         *
+         * role = admin   → Admin Dashboard
+         * role = student → Explore Page
+         */
+        const {
+          data: profile,
+          error: profileError,
+        } = await supabaseAuth
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single();
+
+        if (profileError) {
+          setError(
+            "Unable to load your profile. Please contact the administrator."
+          );
+          return;
+        }
+
+        /*
+         * Step 4:
+         * Redirect based on database role.
+         */
+        if (profile?.role === "admin") {
+          window.location.href = "/admin";
         } else {
-
-          window.location.href =
-            "/explore";
-
+          window.location.href = "/explore";
         }
 
+        return;
       }
 
-      /* SIGNUP */
+      /* =====================================================
+         SIGNUP
+         ===================================================== */
 
-/* SIGNUP */
+      /*
+       * IMPORTANT:
+       *
+       * We DO NOT manually insert into the profiles table here.
+       *
+       * Your Supabase database trigger:
+       * on_auth_user_created
+       *
+       * automatically creates the profile when a new auth user
+       * is created.
+       *
+       * Manually inserting again caused duplicate profile errors.
+       */
 
-else {
+      const {
+        data,
+        error: signupError,
+      } = await supabaseAuth.auth.signUp({
+        email: formData.email,
 
-  const {
-
-    data,
-
-    error,
-
-  } = await supabaseAuth.auth
-
-    .signUp({
-
-      email: formData.email,
-
-      password:
-        formData.password,
-
-      options: {
-
-        emailRedirectTo:
-          `${window.location.origin}/auth/callback`,
-
-      },
-
-    });
-
-  if (error) {
-
-    setError(error.message);
-
-    return;
-
-  }
-
-  /* CREATE PROFILE */
-
-  if (data.user) {
-
-    const {
-
-      error: profileError,
-
-    } = await supabaseAuth
-
-      .from("profiles")
-
-      .insert({
-
-        id: data.user.id,
-
-        full_name:
-          formData.full_name,
-
-      });
-
-    if (profileError) {
-
-      setError(profileError.message);
-
-      return;
-
-    }
-
-  }
-
-  setMode("login");
-
-  setError(
-
-    "Account created successfully. Please login."
-
-  );
-
-}
-
-    } catch (err) {
-
-      setError(
-        "Something went wrong."
-      );
-
-    } finally {
-
-      setLoading(false);
-
-    }
-
-  }
-
-  async function handleGoogleAuth() {
-
-  const { error } =
-    await supabaseAuth.auth
-      .signInWithOAuth({
-
-        provider: "google",
+        password: formData.password,
 
         options: {
-          redirectTo:
-            `${window.location.origin}/explore`,
-        },
+          /*
+           * Sends full_name to Supabase Auth metadata.
+           *
+           * Your database trigger can read this value and
+           * automatically store it in profiles.full_name.
+           */
+          data: {
+            full_name: formData.full_name,
+          },
 
+          /*
+           * Email verification redirect URL.
+           */
+          emailRedirectTo:
+            `${window.location.origin}/auth/callback`,
+        },
       });
 
-  if (error) {
+      if (signupError) {
+        setError(signupError.message);
+        return;
+      }
 
-    setError(error.message);
+      if (!data.user) {
+        setError(
+          "Unable to create your account. Please try again."
+        );
+        return;
+      }
 
+      /*
+       * Switch back to login after successful signup.
+       */
+      setMode("login");
+
+      setError(
+        "Account created successfully. Please verify your email if required, then login."
+      );
+    } catch (err) {
+      console.error("Authentication error:", err);
+
+      setError(
+        "Something went wrong. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
-}
+  /* =====================================================
+     GOOGLE AUTH
+     ===================================================== */
+
+  async function handleGoogleAuth() {
+    try {
+      setLoading(true);
+      setError("");
+
+      const { error } =
+        await supabaseAuth.auth.signInWithOAuth({
+          provider: "google",
+
+          options: {
+            /*
+             * After Google authentication,
+             * the user returns to Explore.
+             */
+            redirectTo:
+              `${window.location.origin}/explore`,
+          },
+        });
+
+      if (error) {
+        setError(error.message);
+      }
+    } catch (err) {
+      console.error("Google authentication error:", err);
+
+      setError(
+        "Unable to continue with Google."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
-
     <main
       className="
       relative
@@ -208,7 +241,6 @@ else {
       text-white
       "
     >
-
       {/* BACKGROUND */}
 
       <div
@@ -286,7 +318,6 @@ else {
         md:px-8
         "
       >
-
         <div
           className="
           relative
@@ -308,8 +339,7 @@ else {
           shadow-[0_0_120px_rgba(139,92,246,0.18)]
           "
         >
-
-      {/* FORMS CONTAINER */}
+          {/* FORMS CONTAINER */}
 
           <div
             className="
@@ -318,8 +348,9 @@ else {
             flex
             "
           >
-
-            {/* LOGIN PANEL */}
+            {/* =====================================================
+                LOGIN PANEL
+                ===================================================== */}
 
             <motion.div
               animate={{
@@ -351,7 +382,6 @@ else {
               lg:py-16
               "
             >
-
               <form
                 onSubmit={handleAuth}
                 className="
@@ -359,7 +389,6 @@ else {
                 max-w-[460px]
                 "
               >
-
                 <p
                   className="
                   uppercase
@@ -393,10 +422,7 @@ else {
                   Back
                 </h1>
 
-            
-
-                {error && (
-
+                {error && mode === "login" && (
                   <div
                     className="
                     mt-8
@@ -414,28 +440,11 @@ else {
                   >
                     {error}
                   </div>
-
                 )}
 
                 {/* EMAIL */}
 
-
-                
-
                 <div className="mt-5">
-
-                  {/* <p
-                    className="
-                    text-sm
-
-                    text-zinc-400
-
-                    mb-3
-                    "
-                  >
-                    Email Address
-                  </p> */}
-
                   <input
                     type="email"
                     required
@@ -443,8 +452,7 @@ else {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        email:
-                          e.target.value,
+                        email: e.target.value,
                       })
                     }
                     placeholder="Email you used to sign up"
@@ -472,25 +480,11 @@ else {
                     shadow-[0_0_40px_rgba(139,92,246,0.08)]
                     "
                   />
-
                 </div>
 
                 {/* PASSWORD */}
 
                 <div className="mt-6">
-
-                  {/* <p
-                    className="
-                    text-sm
-
-                    text-zinc-400
-
-                    mb-3
-                    "
-                  >
-                    Password
-                  </p> */}
-
                   <input
                     type="password"
                     required
@@ -498,8 +492,7 @@ else {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        password:
-                          e.target.value,
+                        password: e.target.value,
                       })
                     }
                     placeholder="Enter your password"
@@ -527,10 +520,9 @@ else {
                     shadow-[0_0_40px_rgba(139,92,246,0.08)]
                     "
                   />
-
                 </div>
 
-                {/* BUTTON */}
+                {/* LOGIN BUTTON */}
 
                 <button
                   type="submit"
@@ -560,68 +552,63 @@ else {
                   shadow-[0_0_60px_rgba(139,92,246,0.45)]
                   "
                 >
-
                   {loading
                     ? "Signing In..."
                     : "Login"}
-
                 </button>
 
+                {/* GOOGLE LOGIN */}
+
                 <div className="mt-5">
+                  <div className="flex items-center gap-4">
+                    <div className="h-px flex-1 bg-white/10" />
 
-  <div className="flex items-center gap-4">
+                    <p className="text-sm text-zinc-500">
+                      or continue with
+                    </p>
 
-    <div className="h-px flex-1 bg-white/10" />
+                    <div className="h-px flex-1 bg-white/10" />
+                  </div>
 
-    <p className="text-sm text-zinc-500">
-      or continue with
-    </p>
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={handleGoogleAuth}
+                    className="
+                    mt-5
 
-    <div className="h-px flex-1 bg-white/10" />
+                    w-full
 
-  </div>
+                    h-14
 
-  <button
-    type="button"
+                    rounded-2xl
 
-    onClick={handleGoogleAuth}
+                    border border-white/10
 
-    className="
-    mt-5
+                    bg-white/[0.04]
 
-    w-full
+                    hover:bg-white/[0.08]
 
-    h-14
+                    transition-all
+                    duration-300
 
-    rounded-2xl
+                    flex
+                    items-center
+                    justify-center
+                    gap-3
+                    "
+                  >
+                    <img
+                      src="https://www.svgrepo.com/show/475656/google-color.svg"
+                      alt="Google"
+                      className="w-5 h-5"
+                    />
 
-    border border-white/10
+                    Continue with Google
+                  </button>
+                </div>
 
-    bg-white/[0.04]
-
-    hover:bg-white/[0.08]
-
-    transition-all
-    duration-300
-
-    flex
-    items-center
-    justify-center
-    gap-3
-    "
-  >
-
-    <img
-      src="https://www.svgrepo.com/show/475656/google-color.svg"
-      alt="Google"
-      className="w-5 h-5"
-    />
-
-    Continue with Google
-
-  </button>
-
-</div>
+                {/* SWITCH TO SIGNUP */}
 
                 <p
                   className="
@@ -636,9 +623,10 @@ else {
 
                   <button
                     type="button"
-                    onClick={() =>
-                      setMode("signup")
-                    }
+                    onClick={() => {
+                      setError("");
+                      setMode("signup");
+                    }}
                     className="
                     ml-2
 
@@ -649,20 +637,13 @@ else {
                   >
                     Create one
                   </button>
-
-                  
-
                 </p>
-
               </form>
-
             </motion.div>
 
-            {/* SIGNUP PANEL */}
-
-
-
-            
+            {/* =====================================================
+                SIGNUP PANEL
+                ===================================================== */}
 
             <motion.div
               animate={{
@@ -700,7 +681,6 @@ else {
               lg:py-16
               "
             >
-
               <form
                 onSubmit={handleAuth}
                 className="
@@ -708,7 +688,6 @@ else {
                 max-w-[460px]
                 "
               >
-
                 <p
                   className="
                   uppercase
@@ -740,83 +719,68 @@ else {
                   Create Account
                 </h1>
 
+                {error && mode === "signup" && (
+                  <div
+                    className="
+                    mt-6
 
-{/* FULL NAME */}
+                    rounded-2xl
 
-<div className="mt-5">
+                    border border-red-500/20
 
-  {/* <p
-    className="
-    text-sm
+                    bg-red-500/10
 
-    text-zinc-400
+                    px-5 py-4
 
-    mb-3
-    "
-  >
-    Full Name
-  </p> */}
+                    text-red-300
+                    "
+                  >
+                    {error}
+                  </div>
+                )}
 
-  <input
-    type="text"
+                {/* FULL NAME */}
 
-    required
+                <div className="mt-5">
+                  <input
+                    type="text"
+                    required
+                    value={formData.full_name}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        full_name: e.target.value,
+                      })
+                    }
+                    placeholder="Enter your full name"
+                    className="
+                    w-full
 
-    value={formData.full_name}
+                    h-14
+                    lg:h-16
 
-    onChange={(e) =>
-      setFormData({
-        ...formData,
-        full_name:
-          e.target.value,
-      })
-    }
+                    rounded-2xl
 
-    placeholder="Enter your full name"
+                    border border-white/10
 
-    className="
-    w-full
+                    bg-white/[0.05]
 
-    h-14
-    lg:h-16
+                    px-6
 
-    rounded-2xl
+                    outline-none
 
-    border border-white/10
+                    transition-all
 
-    bg-white/[0.05]
+                    focus:border-cyan-500
 
-    px-6
-
-    outline-none
-
-    transition-all
-
-    focus:border-cyan-500
-
-    focus:bg-white/[0.08]
-    "
-  />
-
-</div>
-
+                    focus:bg-white/[0.08]
+                    "
+                  />
+                </div>
 
                 {/* EMAIL */}
 
                 <div className="mt-5">
-
-                  {/* <p
-                    className="
-                    text-sm
-
-                    text-zinc-400
-
-                    mb-3
-                    "
-                  >
-                    Email Address
-                  </p> */}
-
                   <input
                     type="email"
                     required
@@ -824,8 +788,7 @@ else {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        email:
-                          e.target.value,
+                        email: e.target.value,
                       })
                     }
                     placeholder="Email you used to sign up"
@@ -851,25 +814,11 @@ else {
                     focus:bg-white/[0.08]
                     "
                   />
-
                 </div>
 
                 {/* PASSWORD */}
 
                 <div className="mt-5">
-
-                  {/* <p
-                    className="
-                    text-sm
-
-                    text-zinc-400
-
-                    mb-3
-                    "
-                  >
-                    Password
-                  </p> */}
-
                   <input
                     type="password"
                     required
@@ -877,8 +826,7 @@ else {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        password:
-                          e.target.value,
+                        password: e.target.value,
                       })
                     }
                     placeholder="Create secure password"
@@ -904,10 +852,9 @@ else {
                     focus:bg-white/[0.08]
                     "
                   />
-
                 </div>
 
-                {/* BUTTON */}
+                {/* SIGNUP BUTTON */}
 
                 <button
                   type="submit"
@@ -937,68 +884,63 @@ else {
                   shadow-[0_0_60px_rgba(59,130,246,0.4)]
                   "
                 >
-
                   {loading
                     ? "Creating Account..."
                     : "Start Journey"}
-
                 </button>
 
+                {/* GOOGLE SIGNUP */}
+
                 <div className="mt-5">
+                  <div className="flex items-center gap-4">
+                    <div className="h-px flex-1 bg-white/10" />
 
-  <div className="flex items-center gap-4">
+                    <p className="text-sm text-zinc-500">
+                      or continue with
+                    </p>
 
-    <div className="h-px flex-1 bg-white/10" />
+                    <div className="h-px flex-1 bg-white/10" />
+                  </div>
 
-    <p className="text-sm text-zinc-500">
-      or continue with
-    </p>
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={handleGoogleAuth}
+                    className="
+                    mt-5
 
-    <div className="h-px flex-1 bg-white/10" />
+                    w-full
 
-  </div>
+                    h-14
 
-  <button
-    type="button"
+                    rounded-2xl
 
-    onClick={handleGoogleAuth}
+                    border border-white/10
 
-    className="
-    mt-5
+                    bg-white/[0.04]
 
-    w-full
+                    hover:bg-white/[0.08]
 
-    h-14
+                    transition-all
+                    duration-300
 
-    rounded-2xl
+                    flex
+                    items-center
+                    justify-center
+                    gap-3
+                    "
+                  >
+                    <img
+                      src="https://www.svgrepo.com/show/475656/google-color.svg"
+                      alt="Google"
+                      className="w-5 h-5"
+                    />
 
-    border border-white/10
+                    Continue with Google
+                  </button>
+                </div>
 
-    bg-white/[0.04]
-
-    hover:bg-white/[0.08]
-
-    transition-all
-    duration-300
-
-    flex
-    items-center
-    justify-center
-    gap-3
-    "
-  >
-
-    <img
-      src="https://www.svgrepo.com/show/475656/google-color.svg"
-      alt="Google"
-      className="w-5 h-5"
-    />
-
-    Continue with Google
-
-  </button>
-
-</div>
+                {/* SWITCH TO LOGIN */}
 
                 <p
                   className="
@@ -1013,9 +955,10 @@ else {
 
                   <button
                     type="button"
-                    onClick={() =>
-                      setMode("login")
-                    }
+                    onClick={() => {
+                      setError("");
+                      setMode("login");
+                    }}
                     className="
                     ml-2
 
@@ -1026,16 +969,15 @@ else {
                   >
                     Login
                   </button>
-
                 </p>
-
               </form>
-
             </motion.div>
-
           </div>
 
-          {/* OVERLAY PANEL */}
+          {/* =====================================================
+              OVERLAY PANEL
+              DESIGN AND ANIMATION UNCHANGED
+              ===================================================== */}
 
           <motion.div
             animate={{
@@ -1064,7 +1006,6 @@ else {
             overflow-hidden
             "
           >
-
             {/* DIAGONAL */}
 
             <div
@@ -1132,7 +1073,6 @@ else {
               px-12
               "
             >
-
               <p
                 className="
                 uppercase
@@ -1183,7 +1123,9 @@ else {
                 Explore intelligent careers,
                 futuristic opportunities,
                 and next-generation paths.
-              </p><br />
+              </p>
+
+              <br />
 
               <Link
                 href="/"
@@ -1213,17 +1155,10 @@ else {
               >
                 Return Home
               </Link>
-
             </div>
-
           </motion.div>
-
         </div>
-
       </div>
-
     </main>
-
   );
-
 }
