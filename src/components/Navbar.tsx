@@ -548,7 +548,7 @@ export default function Navbar() {
 
               {!user && (
                 <Link
-                  href="/admin/login"
+                  href="/auth"
                   onClick={() =>
                     setMobileMenu(false)
                   }
